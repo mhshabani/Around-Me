@@ -1,14 +1,13 @@
 package com.workshop.aroundme.app
 
 import android.os.Bundle
-import android.widget.Toast
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.workshop.aroundme.R
-import com.workshop.aroundme.data.PlaceRepository
-import com.workshop.aroundme.data.model.PlaceEntity
-import com.workshop.aroundme.remote.NetworkManager
-import com.workshop.aroundme.remote.datasource.PlaceDataSource
-import com.workshop.aroundme.remote.service.PlaceService
+import com.workshop.aroundme.app.ui.home.HomeFragment
+import com.workshop.aroundme.app.ui.login.LoginFragment
+import com.workshop.aroundme.app.ui.starred.StarredFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -16,12 +15,32 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val placeRepository = PlaceRepository(PlaceDataSource(PlaceService(NetworkManager())))
-        placeRepository.getFeaturedPlaces(::onFeaturedPlacesReady)
-
+        val userRepository = Injector.provideUserRepository(this)
+        if (userRepository.isLoggedIn()) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.content_frame, HomeFragment())
+                .commit()
+        } else {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.content_frame, LoginFragment())
+                .commit()
+        }
     }
 
-    private fun onFeaturedPlacesReady(list: List<PlaceEntity>?) = runOnUiThread {
-        Toast.makeText(this, list.toString(), Toast.LENGTH_LONG).show()
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.activity_main_toolbar, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item?.itemId) {
+            R.id.starredPlaces -> {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.content_frame, StarredFragment())
+                    .addToBackStack(null)
+                    .commit()
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
